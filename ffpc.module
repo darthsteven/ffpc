@@ -1,3 +1,8 @@
 <?php
 /* yes, this is a blank file. */
-
+function ffpc_views_api() {
+	return array(
+		'api' => 2
+		,'path' => drupal_get_path('module','ffpc')
+	);
+}
