@@ -1,7 +1,6 @@
 <?php
 class ffpc_plugin_row_podcast extends views_plugin_row {
 	function render( $row ) {
-		//watchdog('ffpc','ffpc_plugin_row_podcast::render called for node ' . $row->nid);
 		$output = '';
 
 		$node = node_load( $row->nid );
@@ -10,22 +9,18 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
 		}
 		$getid3 = new getID3;
 
-		// these pairs are no longer valid.... $field = a giant recursed object that doesn't contains $field->content_field
-		//                                     $id    = the fieldname from the field_audio object
-		//foreach ( $this->view->field as $id => $field ) {
+		foreach ( $row as $key => $value ) {
+			if ( preg_match('/^(.+)_filepath$/',$key,$matches) ) {
+				$prefix = $matches[1];
 
-			// this dies now. eek. New views don't $field->content_field anymore :(
-			//foreach ( $node->{$field->content_field['field_name']} as $file ) {
-
-			foreach ( $node->field_audio as $file ) {
-				$info = $getid3->analyze($file['filepath']);
+				$info = $getid3->analyze($row->{$prefix.'_filepath'});
 				$extra = array();
 				$extra[] = array(
 					'key'	=> 'enclosure',
 					'attributes'	=>	array(
-						'url'		=> url( $file['filepath'], array('absolute'=>TRUE) ),
-						'length'	=> $file['filesize'],
-						'type'		=> $file['filemime'],
+						'url'		=> url( $row->{$prefix.'_filepath'}, array('absolute'=>TRUE) ),
+						'length'	=> $row->{$prefix.'_filesize'},
+						'type'		=> $row->{$prefix.'_filemime'},
 					),
 				);
 				$extra[] = array(
@@ -47,7 +42,7 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
 				$extra[] = array('key' => 'pubDate', 'value' => gmdate('r', $node->created));
 				$extra[] = array(
 					'key' => 'guid',
-					'value' => url( $file['filepath'], array('absolute'=>TRUE) ),
+					'value' => url( $row->{$prefix.'_filepath'}, array('absolute'=>TRUE) ),
 				);
 				/*
 				 * The following function takes title, link, description and then
@@ -58,7 +53,7 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
 				*/
 				$output .= format_rss_item( $node->title, NULL, $node->teaser, $extra );
 			}
-		//}
+		}
 		return $output;
 	}
 }
