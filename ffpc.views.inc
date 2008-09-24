@@ -33,6 +33,7 @@ function ffpc_views_plugins() {
 				'title' => t('FileField Podcast'),
 				'help' => t('Display the view as a podcast.'),
 				'handler' => 'ffpc_plugin_display_ffpc',
+				'parent' => 'feed',
 				'path' => drupal_get_path('module','ffpc'),
 				'uses hook menu' => TRUE,
 				'use ajax' => FALSE,
