@@ -1,8 +1,8 @@
 <?php
-/* yes, this is a blank file. */
+
+/**
+ * Implementation of hook_views_api().
+ */
 function ffpc_views_api() {
-	return array(
-		'api' => 2,
-		'path' => drupal_get_path('module','ffpc')
-	);
+  return array('api' => 2);
 }
