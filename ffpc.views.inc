@@ -4,43 +4,35 @@
  * Much of the output here is based on the Apple Podcast standard.  Details
  * can be found here:
  * http://www.apple.com/itunes/store/podcaststechspecs.html
+ * 
+ * Note: We need a custom style plugin because the default RSS plugin does
+ * not permit additional elements to be added to the feed.
 */
 
 function ffpc_views_plugins() {
   return array(
-    'module'  => 'ffpc',
-    'display' => array(
-      'ffpc' => array(
-        'title' => t('FileField Podcast'),
-        'help' => t('Display the view as a podcast.'),
-        'handler' => 'ffpc_plugin_display_ffpc',
-        'uses hook menu' => TRUE,
-        'use ajax' => FALSE,
-        'use pager' => FALSE,
-        'parent' => 'feed',
-        'accept attachments' => FALSE,
-        'admin' => t('FileField Podcast'),
-      ),
-    ),
+    'module' => 'ffpc',
     'style'   => array(
       'podcast' => array(
-        'title' => t('Podcast'),
-        'help' => t('Generates Podcast from a view.'),
+        'title' => t('Podcast Feed'),
+        'help' => t('Generates Podcast Feed from a view.'),
         'handler' => 'ffpc_plugin_style_podcast',
+        'theme' => 'ffpc_view_podcast_feed',
         'uses row plugin' => TRUE,
-        'uses options' => FALSE,
-        'type' => 'ffpc',
+        'uses options' => TRUE,
+        'type' => 'feed',
+        'parent' => 'rss',
       ),
     ),
     'row'   => array(
       'podcast' => array(
-        'title' => t('Podcast'),
-        'help' => t('Each row is a Podcast element.'),
+        'title' => t('Podcast Episode'),
+        'help' => t('Display the node as a Podcast Episode.'),
         'handler' => 'ffpc_plugin_row_podcast',
-        'theme' => 'ffpc_view_row_podcast',
         'uses fields' => TRUE,
-        'uses options' => FALSE,
-        'type' => 'ffpc',
+        'type' => 'feed',
+        'parent' => 'node_rss',
+        'uses options' => TRUE,
       ),
     ),
   );
