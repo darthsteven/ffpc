@@ -41,11 +41,6 @@ class ffpc_plugin_row_podcast extends views_plugin_row_node_rss {
         array('key' => 'pubDate', 'value' => gmdate('r', $item->created)),
         // The author should be an email address. Need to add this in.
         //array('key' => 'author', 'value' => $item->name),
-        array(
-          'key' => 'guid',
-          'value' => $item->nid . ' at ' . $base_url,
-          'attributes' => array('isPermaLink' => 'false')
-        ),
       )
     );
     foreach ($extra as $element) {
@@ -111,6 +106,11 @@ class ffpc_plugin_row_podcast extends views_plugin_row_node_rss {
         $file_extra[] = array(
           'key' => 'itunes:summary',
           'value' => str_replace('&amp;', '&', $stripped_item_text),
+        );
+        $file_extra[] = array(
+          'key' => 'guid',
+          'value' => file_create_url($file['filepath']),
+          'attributes' => array('isPermaLink' => 'false'),
         );
         $file_extra = array_merge($extra, $file_extra);
         /*
