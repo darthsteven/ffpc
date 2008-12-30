@@ -39,7 +39,8 @@ class ffpc_plugin_row_podcast extends views_plugin_row_node_rss {
     $extra = array_merge($extra,
       array(
         array('key' => 'pubDate', 'value' => gmdate('r', $item->created)),
-        array('key' => 'dc:creator', 'value' => $item->name),
+        // The author should be an email address. Need to add this in.
+        //array('key' => 'author', 'value' => $item->name),
         array(
           'key' => 'guid',
           'value' => $item->nid . ' at ' . $base_url,
@@ -71,7 +72,7 @@ class ffpc_plugin_row_podcast extends views_plugin_row_node_rss {
     
     $stripped_item_text = strip_tags($item_text);
     
-    if (strlen($stripped_item_tex) > 255) {
+    if (strlen($stripped_item_text) > 255) {
       $item_subtitle = substr($stripped_item_text, 0, 252) .'...';
     }
     else {
@@ -85,8 +86,8 @@ class ffpc_plugin_row_podcast extends views_plugin_row_node_rss {
     foreach ( $this->view->field as $id => $field ) {
       foreach ( $item->{$field->content_field['field_name']} as $file ) {
         $info = $getid3->analyze($file['filepath']);
-        $extra = array();
-        $extra[] = array(
+        $file_extra = array();
+        $file_extra[] = array(
           'key' => 'enclosure',
           'attributes'  =>  array(
             'url'   => url( $file['filepath'], array('absolute'=>TRUE) ),
@@ -94,28 +95,24 @@ class ffpc_plugin_row_podcast extends views_plugin_row_node_rss {
             'type'    => $file['filemime'],
           ),
         );
-        $extra[] = array(
+        $file_extra[] = array(
           'key' => 'itunes:duration',
           'value' => $info['playtime_string'],
         );
-        $extra[] = array(
+        $file_extra[] = array(
           'key' => 'itunes:author',
           'value' => $info['tags']['id3v2']['artist'][0],
         );
         
-        $extra[] = array(
+        $file_extra[] = array(
           'key' => 'itunes:subtitle',
-          'value' => $item_subtitle,
+          'value' => str_replace('&amp;', '&', $item_subtitle),
         );
-        $extra[] = array(
+        $file_extra[] = array(
           'key' => 'itunes:summary',
-          'value' => $stripped_item_text,
+          'value' => str_replace('&amp;', '&', $stripped_item_text),
         );
-        $extra[] = array('key' => 'pubDate', 'value' => gmdate('r', $item->created));
-        $extra[] = array(
-          'key' => 'guid',
-          'value' => url( $file['filepath'], array('absolute'=>TRUE) ),
-        );
+        $file_extra = array_merge($extra, $file_extra);
         /*
          * The following function takes title, link, description and then
          * all additional XML elements.  For the title we'll use the node
@@ -123,7 +120,7 @@ class ffpc_plugin_row_podcast extends views_plugin_row_node_rss {
          * is overridden by the extra "subtitle" tag but we'll keep it for
          * completeness with RSS and use the node teaser.
         */
-        $output .= format_rss_item($item->title, $item->link, $item_text, $extra );
+        $output .= format_rss_item($item->title, $item->link, $item_text, $file_extra );
       }
     }
     return $output;
