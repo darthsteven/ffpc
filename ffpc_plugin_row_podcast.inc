@@ -1,6 +1,6 @@
 <?php
 class ffpc_plugin_row_podcast extends views_plugin_row_node_rss {
-  
+
   function render($row) {
     // For the most part, this code is taken from node_feed() in node.module
     global $base_url;
@@ -64,16 +64,16 @@ class ffpc_plugin_row_podcast extends views_plugin_row_node_rss {
         $item_text = '';
         break;
     }
-    
+
     $stripped_item_text = strip_tags($item_text);
-    
+
     if (strlen($stripped_item_text) > 255) {
       $item_subtitle = substr($stripped_item_text, 0, 252) .'...';
     }
     else {
       $item_subtitle = $stripped_item_text;
     }
-    
+
     if (!getid3_load(TRUE)) {
       return NULL;
     }
@@ -85,9 +85,9 @@ class ffpc_plugin_row_podcast extends views_plugin_row_node_rss {
         $file_extra[] = array(
           'key' => 'enclosure',
           'attributes'  =>  array(
-            'url'   => url( $file['filepath'], array('absolute'=>TRUE) ),
-            'length'  => $file['filesize'],
-            'type'    => $file['filemime'],
+            'url' => file_create_url($file['filepath']),
+            'length' => $file['filesize'],
+            'type' => $file['filemime'],
           ),
         );
         $file_extra[] = array(
@@ -98,7 +98,7 @@ class ffpc_plugin_row_podcast extends views_plugin_row_node_rss {
           'key' => 'itunes:author',
           'value' => $info['tags']['id3v2']['artist'][0],
         );
-        
+
         $file_extra[] = array(
           'key' => 'itunes:subtitle',
           'value' => str_replace('&amp;', '&', $item_subtitle),
