@@ -1,5 +1,5 @@
 ; $Id$
-name = FieldField Podcast
+name = FileField Podcast
 description = Plug-in for views that turns a list of CCK FileFields into a Podcast
 package = Views
 core = 6.x
