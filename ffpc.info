@@ -1,4 +1,3 @@
-; $Id$
 name = FileField Podcast
 description = Plug-in for views that turns a list of CCK FileFields into a Podcast
 package = Views
