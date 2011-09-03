@@ -36,11 +36,11 @@ function ffpc_views_plugins() {
         'title' => t('Podcast Episode'),
         'help' => t('Display the node as a Podcast Episode.'),
         'handler' => 'ffpc_plugin_row_podcast',
-        'uses fields' => TRUE,
-        'type' => 'feed',
-        'base' => array('node'), // only works with 'node' as base.
-        'path' => drupal_get_path('module', 'ffpc'),
-        'uses options' => TRUE,
+		'path' => drupal_get_path('module', 'ffpc'),
+		'theme' => 'views_view_row_rss',
+		'base' => array('node'), // only works with 'node' as base.
+		'uses options' => TRUE,
+		'type' => 'feed',
       ),
     ),
   );
