@@ -61,17 +61,34 @@ function template_preprocess_ffpc_view_podcast_feed(&$vars) {
   }
 
   // This is where we add additional elements to the podcast.
-  $args = array(
-    'itunes:owner' => array(
-      'itunes:name' => $options['itunes-owner'],
-      'itunes:email' => variable_get('site_mail', ini_get('sendmail_from')),
-    ),
-    'itunes:subtitle' => $options['itunes-subtitle'],
-    'itunes:author' => $options['itunes-author'],
-    'itunes:summary' => $options['description'],
-    'itunes:explicit' => 'clean',
-     //'itunes:category text="Religion &amp; Spirituality"' => array(),
-  );
+  $args = array();
+  if (!empty($options['copyright'])) {
+    $args['copyright'] = $options['copyright'];
+  }
+  if (!empty($options['itunes-image'])) {
+    $args['itunes:image'] = $options['itunes-image'];
+  }
+  if (!empty($options['itunes-explicit'])) {
+    $args['itunes:explicit'] = $options['itunes-explicit'];
+  }
+  if (!empty($options['itunes-owner-name'])) {
+    $args['itunes:owner']['itunes:name'] = $options['itunes-owner-name'];
+  }
+  if (!empty($options['itunes-owner-email'])) {
+    $args['itunes:owner']['itunes:email'] = $options['itunes-owner-email'];
+  }
+  if (!empty($options['itunes-subtitle'])) {
+    $args['itunes:subtitle'] = $options['itunes-subtitle'];
+  }
+  if (!empty($options['itunes-author'])) {
+    $args['itunes:author'] = $options['itunes-author'];
+  }
+  if (!empty($options['itunes-summary'])) {
+    $args['itunes:summary'] = $options['itunes-summary'];
+  }
+  
+  
+  
   
   $vars['namespaces'] = drupal_attributes($style->namespaces);
   $vars['channel'] = format_rss_channel($title, $vars['link'], $description, $items, $language->language, $args);
