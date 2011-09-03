@@ -21,24 +21,22 @@ class ffpc_plugin_row_podcast extends views_plugin_row_node_rss {
 
     if ($item_length != 'title') {
       $teaser = ($item_length == 'teaser') ? TRUE : FALSE;
-
       // Filter and prepare node teaser
       if (node_hook($item, 'view')) {
         $item = node_invoke($item, 'view', $teaser, FALSE);
       }
       else {
-        $item = node_prepare($item, $teaser);
+        node_object_prepare($item, $teaser);
       }
-
       // Allow modules to change $node->teaser before viewing.
-      node_invoke_nodeapi($item, 'view', $teaser, FALSE);
+      module_invoke_all('node_view', $item, $teaser, FALSE);
     }
 
     // Allow modules to add additional item fields and/or modify $item
-    $extra = node_invoke_nodeapi($item, 'rss item');
+    $extra = module_invoke_all('node_rss_item', $item);
     $extra = array_merge($extra,
       array(
-        array('key' => 'pubDate', 'value' => gmdate('r', $item->created)),
+        array('key' => 'pubDate', 'value' => $item->field_time['und'][0]['value']),
         // The author should be an email address. Need to add this in.
         //array('key' => 'author', 'value' => $item->name),
       )
@@ -48,14 +46,13 @@ class ffpc_plugin_row_podcast extends views_plugin_row_node_rss {
         $this->view->style_plugin->namespaces = array_merge($this->view->style_plugin->namespaces, $element['namespace']);
       }
     }
-
     // Prepare the item description
     switch ($item_length) {
       case 'fulltext':
         $item_text = $item->body;
         break;
       case 'teaser':
-        $item_text = $item->teaser;
+        $item_text = $item->field_text['und'][0]['safe_value'];;
         if (!empty($item->readmore)) {
           $item_text .= '<p>' . l(t('read more'), 'node/' . $item->nid, array('absolute' => TRUE, 'attributes' => array('target' => '_blank'))) . '</p>';
         }
@@ -79,14 +76,15 @@ class ffpc_plugin_row_podcast extends views_plugin_row_node_rss {
     }
     $getid3 = new getID3;
     foreach ( $this->view->field as $id => $field ) {
-      if ($field->content_field['widget']['type'] == 'filefield_widget') {
-        foreach ( $item->{$field->content_field['field_name']} as $file ) {
-          $info = $getid3->analyze($file['filepath']);
+      if ($field->field_info['type'] == 'file') {
+        foreach ( $item->{$field->field_info['field_name']} as $f ) {
+          $file = $f[0];  
+	  $info = $getid3->analyze(drupal_realpath($file['uri']));
           $file_extra = array();
           $file_extra[] = array(
             'key' => 'enclosure',
             'attributes'  =>  array(
-              'url' => file_create_url($file['filepath']),
+              'url' => file_create_url($file['uri']),
               'length' => $file['filesize'],
               'type' => $file['filemime'],
             ),
@@ -108,11 +106,11 @@ class ffpc_plugin_row_podcast extends views_plugin_row_node_rss {
             'key' => 'itunes:summary',
             'value' => str_replace('&amp;', '&', $stripped_item_text),
           );
-          $file_extra[] = array(
+          /*$file_extra[] = array(
             'key' => 'guid',
             'value' => file_create_url($file['filepath']),
             'attributes' => array('isPermaLink' => 'false'),
-          );
+          );*/
           $file_extra = array_merge($extra, $file_extra);
           /*
            * The following function takes title, link, description and then

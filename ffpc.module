@@ -1,12 +1,17 @@
 <?php
 
 /**
- * Implementation of hook_views_api().
+ * Implements hook_views_api().
  */
 function ffpc_views_api() {
-  return array('api' => 2);
+  return array('api' => 2,         
+               'path' => drupal_get_path('module', 'ffpc'),
+  );
 }
 
+/**
+ * Implements hook_preprocess_ffpc_view_podcast_feed().
+ */
 function template_preprocess_ffpc_view_podcast_feed(&$vars) {
   global $base_url;
   global $language;
@@ -58,12 +63,18 @@ function template_preprocess_ffpc_view_podcast_feed(&$vars) {
   // This is where we add additional elements to the podcast.
   $args = array(
     'itunes:owner' => array(
+      'itunes:name' => $options['itunes-owner'],
       'itunes:email' => variable_get('site_mail', ini_get('sendmail_from')),
     ),
+    'itunes:subtitle' => $options['itunes-subtitle'],
+    'itunes:author' => $options['itunes-author'],
+    'itunes:summary' => $options['description'],
+    'itunes:explicit' => 'clean',
+     //'itunes:category text="Religion &amp; Spirituality"' => array(),
   );
   
   $vars['namespaces'] = drupal_attributes($style->namespaces);
   $vars['channel'] = format_rss_channel($title, $vars['link'], $description, $items, $language->language, $args);
 
-  drupal_set_header('Content-Type: application/rss+xml; charset=utf-8');
+  //drupal_add_http_header('Content-Type', 'application/rss+xml');
 }

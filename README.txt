@@ -1,3 +1,4 @@
+// $id$
 
 INTRODUCTION
 ------------
@@ -10,8 +11,10 @@ http://getid3.org for more details.
 Podcast feeds are those as defined by the specification released by Apple and
 available at http://www.apple.com/itunes/store/podcaststechspecs.html.
 
+
 INSTALLATION
 ------------
+
 1. Download and unzip the FileField Podcaster module into your modules directory.
 
 2. Goto Administer > Site Building > Modules and enable FileField Podcaster.
@@ -24,7 +27,9 @@ INSTALLATION
 
 6. Add a Filefield as a field.
 
+
 AUTHORS
 -------
+
 - Maintained by Matt Farina (http://drupal.org/user/25701)
 - Originally written by suydam (http://drupal.org/user/50195)

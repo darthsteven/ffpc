@@ -1,9 +1,13 @@
+; $Id: ffpc.info,v 1.5 2009/12/28 22:37:52 mfer Exp $
 name = FileField Podcast
-description = Plug-in for views that turns a list of CCK FileFields into a Podcast
+description = Plug-in for Views that turns a list of file fields into a podcast
 package = Views
-core = 6.x
-dependencies[] = content
+core = 7.x
+
 dependencies[] = views
-dependencies[] = filefield
-dependencies[] = filefield_meta
 dependencies[] = getid3
+
+files[] = ffpc.module
+files[] = ffpc.views.inc
+files[] = ffpc_plugin_style_podcast.inc
+files[] = ffpc_plugin_row_podcast.inc

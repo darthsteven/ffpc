@@ -1,18 +1,22 @@
 <?php
-
-/*
- * Much of the output here is based on the Apple Podcast standard.  Details
- * can be found here:
- * http://www.apple.com/itunes/store/podcaststechspecs.html
+/**
+ * @file
+ * Views plugins for FileField Podcaster.
+ *
+ * Much of the output here is based on the Apple Podcast standard.
+ * @see http://www.apple.com/itunes/store/podcaststechspecs.html
  * 
- * Note: We need a custom style plugin because the default RSS plugin does
- * not permit additional elements to be added to the feed.
-*/
+ * Note: We need a custom style plugin because the default RSS plugin does not
+ * permit additional elements to be added to the feed.
+ */
 
+/**
+ * Implements hook_views_plugins().
+ */
 function ffpc_views_plugins() {
   return array(
     'module' => 'ffpc',
-    'style'   => array(
+    'style' => array(
       'podcast' => array(
         'title' => t('Podcast Feed'),
         'help' => t('Generates Podcast Feed from a view.'),
@@ -20,18 +24,22 @@ function ffpc_views_plugins() {
         'theme' => 'ffpc_view_podcast_feed',
         'uses row plugin' => TRUE,
         'uses options' => TRUE,
+        'uses fields' => TRUE,
+        'uses grouping' => FALSE,
+	'even empty' => TRUE,
         'type' => 'feed',
-        'parent' => 'rss',
+        'path' => drupal_get_path('module', 'ffpc'),
       ),
     ),
-    'row'   => array(
-      'podcast' => array(
+    'row' => array(
+      'podcast_node' => array(
         'title' => t('Podcast Episode'),
         'help' => t('Display the node as a Podcast Episode.'),
         'handler' => 'ffpc_plugin_row_podcast',
         'uses fields' => TRUE,
         'type' => 'feed',
-        'parent' => 'node_rss',
+        'base' => array('node'), // only works with 'node' as base.
+        'path' => drupal_get_path('module', 'ffpc'),
         'uses options' => TRUE,
       ),
     ),
