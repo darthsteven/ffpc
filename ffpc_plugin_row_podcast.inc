@@ -13,9 +13,56 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
   function option_definition() {
     $options = parent::option_definition();
 
-    $options['title_field'] = array('default' => '',);
-    $options['author_field'] = array('default' => '',);
-    //$options[''] = array('default' => '',);
+    $options['title_field'] = array(
+	  'default' => '',
+	);
+    $options['author_field'] = array(
+	  'default' => '',
+	  'ffpc' => array(
+		'xml_element' => 'author',
+		'title' => t('Author field'),
+		'description' => t('This will be used as the author of podcast episodes.'),
+	  ),
+	);
+    $options['subtitle_field'] = array(
+	  'default' => '',
+	  'ffpc' => array(
+		'xml_element' => 'itunes:subtitle',
+		'title' => t('Subtitle field'),
+		'description' => t('The contents of this tag are shown in the Description column in iTunes. The subtitle displays best if it is only a few words long.'),
+	  ),
+	);
+	$options['summary_field'] = array(
+	  'default' => '',
+	  'ffpc' => array(
+		'xml_element' => 'description',
+		'title' => t('Summary field'),
+		'description' => t('The contents of this tag are shown in a separate window that appears when the "circled i" in the Description column is clicked. It also appears on the iTunes page for your podcast. This field can be up to 4000 characters.'),
+	  ),
+	);
+	$options['keywords_field'] = array(
+	  'default' => '',
+	  'ffpc' => array(
+		'xml_element' => 'itunes:keywords',
+		'title' => t('Keywords field'),
+		'description' => t('This tag allows users to search on a maximum of 12 text keywords. Use commas to separate keywords.'),
+	  ),
+	);
+	/**
+	 * Todo:
+	 * - pubDate
+	 * - itunes:block
+	 * - itunes:image
+	 * - itunes:duration
+	 * - itunes:explicit
+	 * - itunes:isClosedCaptioned
+	 * - itunes:order
+	 * - enclosure
+	 * - guid
+	 */
+	
+	
+	
 
     return $options;
   }
@@ -36,56 +83,80 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
       '#title' => t('Title field'),
       '#options' => $field_options,
       '#default_value' => $this->options['title_field'],
-      '#title' => t('This will be used as the title of podcast epsodes.'),
+      '#description' => t('This will be used as the title of podcast epsodes.'),
       '#required' => TRUE,
     );
-
-    $form['author_field'] = array(
-      '#type' => 'select',
-      '#title' => t('Author field'),
-      '#options' => $field_options_optional,
-      '#default_value' => $this->options['author_field'],
-      '#title' => t('This will be used as the author of podcast epsodes.'),
-    );
+	
+	foreach ($this->option_definition() as $option => $options) {
+	  if (isset($options['ffpc'])) {
+		$form[$option] = array(
+		  '#type' => 'select',
+		  '#title' => $options['ffpc']['title'],
+		  '#options' => $field_options_optional,
+		  '#default_value' => $this->options[$option],
+		  '#description' => isset($options['ffpc']['description']) ? $options['ffpc']['description'] : '', 
+		);
+		if (isset($options['ffpc']['required']) && $options['ffpc']['required']) {
+		  $form[$option]['#options'] = $field_options;
+		}
+	  }
+	}
+  }
+  
+  function render_field($field, $from_options = TRUE, $strip_tags = TRUE) {
+	$render = '';
+	if ($from_options) {
+	  if (isset($this->options[$field])) {
+		$field = $this->options[$field];
+	  }
+	  else {
+		$field = '';
+	  }
+	}
+	if (!empty($field)) {
+	  $idx = $this->view->row_index;
+	  $render = $this->view->style_plugin->get_field($this->view->row_index, $field);
+	  $this->view->row_index = $idx;
+	}
+	
+	if (!empty($render) && (strpos($render, '<') !== FALSE)) {
+	  $render = strip_tags($render);
+	  if (!empty($render)) {
+		$render = trim($render);
+	  }
+	}
+	return $render;
   }
 
   function render($row) {
     // For the most part, this code is taken from node_feed() in node.module
     global $base_url;
 
-    dsm($this->view->row_index);
-    dsm($this->view->style_plugin->get_field($this->view->row_index, $this->options['author_field']));
-
-    $rss_namespaces = array('xmlns:dc' => 'http://purl.org/dc/elements/1.1/');
+    $rss_namespaces = array(
+	  'xmlns:itunes' => 'http://www.itunes.com/dtds/podcast-1.0.dtd',
+	);
     $rss_elements = array(
       //array('key' => 'pubDate', 'value' => gmdate('r', $node->created)),
-      //array('key' => 'dc:creator', 'value' => $node->name),
       //array('key' => 'guid', 'value' => $node->nid . ' at ' . $base_url, 'attributes' => array('isPermaLink' => 'false'))
     );
 
     $this->view->style_plugin->namespaces = array_merge($this->view->style_plugin->namespaces, $rss_namespaces);
 
     $item = new stdClass;
-    //$item->description = $item_text;
 
-    $title_field_obj = $this->view->display_handler->get_handler('field', $this->options['title_field']);
-    $title_field = $title_field_obj->field_alias;
-    $item->title = $row->$title_field;
+    // Add fields to the item that are special
+    $item->title = $this->render_field('title_field');
+	
+	// Add all the other elements, defined in options.
+	foreach ($this->option_definition() as $option => $options) {
+	  if (isset($options['ffpc']['xml_element'])) {
+		if ($value = $this->render_field($option)) {
+		  $rss_elements[] = array('key' => $options['ffpc']['xml_element'], 'value' => $value);
+		}
+	  }
+	}
 
-    if (!empty($this->options['author_field'])) {
-      $author_field_obj = $this->view->display_handler->get_handler('field', $this->options['author_field']);
-      //dsm($author_field_obj->render();
-      $author_field = $author_field_obj->field_alias;
-      $rss_elements[] = array('key' => 'author', 'value' => $author_field);
-    }
-
-
-    //$item->link = url("node/$node->nid", array('absolute' => TRUE));
     $item->elements = $rss_elements;
-    //$item->nid = $node->nid;
-    //if (isset($node->readmore)) {
-    //  $item->readmore = $node->readmore;
-    //}
 
     return theme($this->theme_functions(),
       array(
