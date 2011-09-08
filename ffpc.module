@@ -86,10 +86,10 @@ function template_preprocess_ffpc_view_podcast_feed(&$vars) {
   if (!empty($options['itunes-summary'])) {
     $args['itunes:summary'] = $options['itunes-summary'];
   }
-  
-  
-  
-  
+
+
+
+
   $vars['namespaces'] = drupal_attributes($style->namespaces);
   $vars['channel'] = format_rss_channel($title, $vars['link'], $description, $items, $language->language, $args);
 
@@ -99,13 +99,13 @@ function template_preprocess_ffpc_view_podcast_feed(&$vars) {
 /**
  * Implements hook_node_view().
  */
-function ffpc_node_view($node, $view_mode, $langcode) {
+/*function ffpc_node_view($node, $view_mode, $langcode) {
   // If the view mode is RSS, lets go looking for ID3 tags to add.
   if ($view_mode == 'rss') {
     if (!getid3_load(TRUE)) {
       return NULL;
     }
-    
+
     $fields = drupal_static(__FUNCTION__);
     $type = 'node';
     // Find the meta tag fields to iterate over.
@@ -122,7 +122,7 @@ function ffpc_node_view($node, $view_mode, $langcode) {
       }
     }
     $getid3 = new getID3;
-    
+
     foreach ($fields[$type] as $key) {
       if ($items = field_get_items($type, $node, $key, $langcode)) {
         foreach ($items as $item) {
@@ -137,7 +137,7 @@ function ffpc_node_view($node, $view_mode, $langcode) {
                 'type' => $item['filemime'],
               ),
             );
-                      
+
             if (!empty($id3_info['playtime_string'])) {
               $node->rss_elements[] = array(
                 'key' => 'itunes:duration',
@@ -150,7 +150,7 @@ function ffpc_node_view($node, $view_mode, $langcode) {
                 'value' => $id3_info['tags']['id3v2']['artist'][0],
               );
             }
-  
+
             //$file_extra[] = array(
             //  'key' => 'itunes:subtitle',
             //  'value' => str_replace('&amp;', '&', $item_subtitle),
@@ -159,16 +159,16 @@ function ffpc_node_view($node, $view_mode, $langcode) {
             //  'key' => 'itunes:summary',
             //  'value' => str_replace('&amp;', '&', $stripped_item_text),
             //);
-            
+
             // Only consider the first successful file.
             break 2;
           }
         }
       }
     }
-    
+
     unset($getid3);
-    
-    
+
+
   }
-}
+}*/

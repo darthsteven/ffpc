@@ -8,58 +8,84 @@
  * Plugin which performs a node_view on the resulting object
  * and formats it as an iTunes podcast item.
  */
-class ffpc_plugin_row_podcast extends views_plugin_row_node_rss {
+class ffpc_plugin_row_podcast extends views_plugin_row {
+
+  function option_definition() {
+    $options = parent::option_definition();
+
+    $options['title_field'] = array('default' => '',);
+    $options['author_field'] = array('default' => '',);
+    //$options[''] = array('default' => '',);
+
+    return $options;
+  }
+
+  function options_form(&$form, &$form_state) {
+    parent::options_form($form, $form_state);
+
+    $field_options = array();
+    $fields = $this->display->handler->get_handlers('field');
+    foreach ($fields as $id => $handler) {
+      $field_options[$id] = $handler->ui_name(FALSE);
+    }
+
+    $field_options_optional = array_merge(array('' => t('- None -')), $field_options);
+
+    $form['title_field'] = array(
+      '#type' => 'select',
+      '#title' => t('Title field'),
+      '#options' => $field_options,
+      '#default_value' => $this->options['title_field'],
+      '#title' => t('This will be used as the title of podcast epsodes.'),
+      '#required' => TRUE,
+    );
+
+    $form['author_field'] = array(
+      '#type' => 'select',
+      '#title' => t('Author field'),
+      '#options' => $field_options_optional,
+      '#default_value' => $this->options['author_field'],
+      '#title' => t('This will be used as the author of podcast epsodes.'),
+    );
+  }
 
   function render($row) {
     // For the most part, this code is taken from node_feed() in node.module
-    global $base_url;  
+    global $base_url;
 
-    $nid = $row->{$this->field_alias};
-    if (!is_numeric($nid)) {
-      return;
-    }
+    dsm($this->view->row_index);
+    dsm($this->view->style_plugin->get_field($this->view->row_index, $this->options['author_field']));
 
-    $item_length = $this->options['item_length'];
-    if ($item_length == 'default') {
-      $item_length = variable_get('feed_item_length', 'teaser');
-    }
-
-    // Load the specified node:
-    $node = $this->nodes[$nid];
-    if (empty($node)) {
-      return;
-    }
-
-    $item_text = '';
-
-    $node->rss_namespaces = array('xmlns:dc' => 'http://purl.org/dc/elements/1.1/');
-    $node->rss_elements = array(
-      array('key' => 'pubDate', 'value' => gmdate('r', $node->created)),
-      array('key' => 'dc:creator', 'value' => $node->name),
-      array('key' => 'guid', 'value' => $node->nid . ' at ' . $base_url, 'attributes' => array('isPermaLink' => 'false'))
+    $rss_namespaces = array('xmlns:dc' => 'http://purl.org/dc/elements/1.1/');
+    $rss_elements = array(
+      //array('key' => 'pubDate', 'value' => gmdate('r', $node->created)),
+      //array('key' => 'dc:creator', 'value' => $node->name),
+      //array('key' => 'guid', 'value' => $node->nid . ' at ' . $base_url, 'attributes' => array('isPermaLink' => 'false'))
     );
 
-    // The node gets built and modules add to or modify $node->rss_elements
-    // and $node->rss_namespaces.
-    node_build_content($node, 'rss');
-
-    $this->view->style_plugin->namespaces = array_merge($this->view->style_plugin->namespaces, $node->rss_namespaces);
-
-    if ($item_length != 'title' && !empty($node->content)) {
-      // We render node contents and force links to be last.
-      //$links = drupal_render($node->content['links']);
-      $item_text .= drupal_render($node->content) /*. $links*/;
-    }
+    $this->view->style_plugin->namespaces = array_merge($this->view->style_plugin->namespaces, $rss_namespaces);
 
     $item = new stdClass;
-    $item->description = $item_text;
-    $item->title = $node->title;
-    $item->link = url("node/$node->nid", array('absolute' => TRUE));
-    $item->elements = $node->rss_elements;
-    $item->nid = $node->nid;
-    if (isset($node->readmore)) {
-      $item->readmore = $node->readmore;
+    //$item->description = $item_text;
+
+    $title_field_obj = $this->view->display_handler->get_handler('field', $this->options['title_field']);
+    $title_field = $title_field_obj->field_alias;
+    $item->title = $row->$title_field;
+
+    if (!empty($this->options['author_field'])) {
+      $author_field_obj = $this->view->display_handler->get_handler('field', $this->options['author_field']);
+      //dsm($author_field_obj->render();
+      $author_field = $author_field_obj->field_alias;
+      $rss_elements[] = array('key' => 'author', 'value' => $author_field);
     }
+
+
+    //$item->link = url("node/$node->nid", array('absolute' => TRUE));
+    $item->elements = $rss_elements;
+    //$item->nid = $node->nid;
+    //if (isset($node->readmore)) {
+    //  $item->readmore = $node->readmore;
+    //}
 
     return theme($this->theme_functions(),
       array(
@@ -68,7 +94,7 @@ class ffpc_plugin_row_podcast extends views_plugin_row_node_rss {
         'row' => $item
       ));
   }
-  
+
   function old_render($row) {
     // For the most part, this code is taken from node_feed() in node.module
     global $base_url;
@@ -146,7 +172,7 @@ class ffpc_plugin_row_podcast extends views_plugin_row_node_rss {
     foreach ( $this->view->field as $id => $field ) {
       if ($field->field_info['type'] == 'file') {
         foreach ( $item->{$field->field_info['field_name']} as $f ) {
-          $file = $f[0];  
+          $file = $f[0];
 	  $info = $getid3->analyze(drupal_realpath($file['uri']));
           $file_extra = array();
           $file_extra[] = array(

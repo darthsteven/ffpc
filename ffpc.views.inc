@@ -5,7 +5,7 @@
  *
  * Much of the output here is based on the Apple Podcast standard.
  * @see http://www.apple.com/itunes/store/podcaststechspecs.html
- * 
+ *
  * Note: We need a custom style plugin because the default RSS plugin does not
  * permit additional elements to be added to the feed.
  */
@@ -26,7 +26,7 @@ function ffpc_views_plugins() {
         'uses options' => TRUE,
         'uses fields' => TRUE,
         'uses grouping' => FALSE,
-	'even empty' => TRUE,
+				'even empty' => TRUE,
         'type' => 'feed',
         'path' => drupal_get_path('module', 'ffpc'),
       ),
@@ -36,11 +36,12 @@ function ffpc_views_plugins() {
         'title' => t('Podcast Episode'),
         'help' => t('Display the node as a Podcast Episode.'),
         'handler' => 'ffpc_plugin_row_podcast',
-		'path' => drupal_get_path('module', 'ffpc'),
-		'theme' => 'views_view_row_rss',
-		'base' => array('node'), // only works with 'node' as base.
-		'uses options' => TRUE,
-		'type' => 'feed',
+				'path' => drupal_get_path('module', 'ffpc'),
+				'theme' => 'views_view_row_rss',
+				'base' => array('node'), // only works with 'node' as base.
+				'uses options' => TRUE,
+				'type' => 'feed',
+				'uses fields' => TRUE,
       ),
     ),
   );
