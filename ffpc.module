@@ -10,6 +10,36 @@ function ffpc_views_api() {
 }
 
 /**
+ * Implements hook_ffpc_file_field_types().
+ */
+function ffpc_ffpc_file_field_types() {
+  $fields = array();
+
+  $fields['file'] = array(
+    'render callback' => 'ffpc_file_field_enclosure_render',
+  );
+
+  return $fields;
+}
+
+/**
+ * Render callback for the file field type.
+ */
+function ffpc_file_field_enclosure_render(&$rss_elements, $value, $view_field) {
+  foreach ($value as $file) {
+    $rss_elements[] = array(
+      'key' => 'enclosure',
+      'attributes'  =>  array(
+        'url' => file_create_url($file['uri']),
+        'length' => $file['filesize'],
+        'type' => $file['filemime'],
+      ),
+    );
+    break;
+  }
+}
+
+/**
  * Implements hook_preprocess_ffpc_view_podcast_feed().
  */
 function template_preprocess_ffpc_view_podcast_feed(&$vars) {
