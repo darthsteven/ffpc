@@ -38,6 +38,15 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
       //  'description' => t('This specifies the date and time when an episode was released.'),
       //),
     );
+    $options['link_field'] = array(
+      'default' => '',
+      'ffpc' => array(
+        'xml_element' => 'link',
+        'title' => t('Link field'),
+        'description' => t('This will be used as a Link for podcast episodes.'),
+        'on_object' => TRUE,
+      ),
+    );
     $options['author_field'] = array(
       'default' => '',
       'ffpc' => array(
