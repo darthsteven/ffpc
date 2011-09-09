@@ -10,6 +10,20 @@ function ffpc_views_api() {
 }
 
 /**
+ * Get all the enclosure field types supported.
+ */
+function ffpc_get_enclosure_field_types() {
+  $field_types = drupal_static(__FUNCTION__);
+
+  if (!isset($field_types)) {
+    $field_types = module_invoke_all('ffpc_file_field_types');
+    drupal_alter('ffpc_file_field_types', $field_types);
+  }
+
+  return $field_types;
+}
+
+/**
  * Implements hook_ffpc_file_field_types().
  */
 function ffpc_ffpc_file_field_types() {
@@ -25,8 +39,9 @@ function ffpc_ffpc_file_field_types() {
 /**
  * Render callback for the file field type.
  */
-function ffpc_file_field_enclosure_render(&$rss_elements, $value, $view_field) {
-  foreach ($value as $file) {
+function ffpc_file_field_enclosure_render(&$rss_elements, $value, $field_handler) {
+  $files = $field_handler->get_value($value);
+  foreach ($files as $file) {
     $rss_elements[] = array(
       'key' => 'enclosure',
       'attributes'  =>  array(

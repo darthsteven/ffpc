@@ -76,15 +76,12 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
     $field_options = array();
     $fields = $this->display->handler->get_handlers('field');
     $file_fields = array();
-    // Get all the field types that we handle.
-    // TODO: Factor this out somewhere.
-    $file_field_types = module_invoke_all('ffpc_file_field_types');
-    drupal_alter('ffpc_file_field_types', $file_field_types);
-    $file_field_field_types = array_keys($file_field_types);
+    // Get all the enclosure field types that we handle.
+    $enclosure_field_types = array_keys(ffpc_get_enclosure_field_types());
     foreach ($fields as $id => $handler) {
       $field_options[$id] = $handler->ui_name(FALSE);
       if (isset($handler->field_info['type'])) {
-        if (in_array($handler->field_info['type'], $file_field_field_types)) {
+        if (in_array($handler->field_info['type'], $enclosure_field_types)) {
           $file_fields[$id] = $handler->ui_name(FALSE);
         }
       }
@@ -179,16 +176,14 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
       }
     }
 
-    // Get all the field types that we handle.
-    // TODO: Factor this out somewhere.
-    $file_field_types = module_invoke_all('ffpc_file_field_types');
-    drupal_alter('ffpc_file_field_types', $file_field_types);
-    $file_field = $this->view->display_handler->get_handler('field', $this->options['enclosure_field']);
-    if (isset($file_field->field_info['type'])) {
-      $render_callback = $file_field_types[$file_field->field_info['type']]['render callback'];
+    // Now handle the enclosure.
+    $enclosure_field_types = ffpc_get_enclosure_field_types();
+    $field_handler = $this->view->display_handler->get_handler('field', $this->options['enclosure_field']);
+    if (isset($field_handler->field_info['type'])) {
+      $render_callback = $enclosure_field_types[$field_handler->field_info['type']]['render callback'];
       if (function_exists($render_callback)) {
-        $file_value = $file_field->get_value($this->view->result[$this->view->row_index]);
-        $render_callback($rss_elements, $file_value, $file_field);
+        $view_values = $this->view->result[$this->view->row_index];
+        $render_callback($rss_elements, $view_values, $field_handler);
       }
     }
 
