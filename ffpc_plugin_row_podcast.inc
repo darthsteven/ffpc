@@ -19,6 +19,25 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
     $options['enclosure_field'] = array(
       'default' => '',
     );
+    $options['guid_field'] = array(
+      'default' => '',
+      'ffpc' => array(
+        'xml_element' => 'guid',
+        'title' => t('GUID field'),
+        'description' => t('This will be used as the GUID of podcast episodes.'),
+      ),
+    );
+    $options['guid_perma'] = array(
+      'default' => FALSE,
+    );
+    $options['pubdate_field'] = array(
+      'default' => '',
+      //'ffpc' => array(
+      //  'xml_element' => 'pubDate',
+      //  'title' => t('Publication date field'),
+      //  'description' => t('This specifies the date and time when an episode was released.'),
+      //),
+    );
     $options['author_field'] = array(
       'default' => '',
       'ffpc' => array(
@@ -54,6 +73,7 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
     );
     /**
      * Todo:
+     * - link
      * - pubDate
      * - itunes:block
      * - itunes:image
@@ -61,12 +81,29 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
      * - itunes:explicit
      * - itunes:isClosedCaptioned
      * - itunes:order
-     * - enclosure
-     * - guid
      */
 
 
 
+
+    return $options;
+  }
+
+  protected function compute_field_options($type, $fields) {
+    $options = array();
+    $ffpc_handlers = ffpc_get_handled_field_types($type);
+    foreach ($fields as $id => &$handler) {
+      foreach ($ffpc_handlers as $ffpc_id => $ffpc_handler) {
+        if (isset($ffpc_handler['identification callback']) && function_exists($ffpc_handler['identification callback'])) {
+          $function = $ffpc_handler['identification callback'];
+          if ($function($handler)) {
+            $options[$id . ':' . $ffpc_id] = $handler->ui_name(FALSE);
+            // The first $ffpc_handler to ID the handler owns it.
+            break;
+          }
+        }
+      }
+    }
 
     return $options;
   }
@@ -77,23 +114,20 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
     $field_options = array();
     $fields = $this->display->handler->get_handlers('field');
     $file_fields = array();
-    // Get all the enclosure field types that we handle.
-    $enclosure_field_types = array_keys(ffpc_get_enclosure_field_types());
+
     foreach ($fields as $id => $handler) {
       $field_options[$id] = $handler->ui_name(FALSE);
-      if (isset($handler->field_info['type'])) {
-        if (in_array($handler->field_info['type'], $enclosure_field_types)) {
-          $file_fields[$id] = $handler->ui_name(FALSE);
-        }
-      }
     }
-
     $field_options_optional = array_merge(array('' => t('- None -')), $field_options);
+
+    // Get all the enclosure field types that we handle.
+    $enclosure_field_types = $this->compute_field_options('file', $fields);
+    $date_field_types = $this->compute_field_options('date', $fields);
 
     $form['enclosure_field'] = array(
       '#type' => 'select',
       '#title' => t('Enclosure field'),
-      '#options' => $file_fields,
+      '#options' => $enclosure_field_types,
       '#default_value' => $this->options['enclosure_field'],
       '#description' => t('This will be used as the file for the podcast episode.'),
       '#required' => TRUE,
@@ -106,6 +140,14 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
       '#default_value' => $this->options['title_field'],
       '#description' => t('This will be used as the title of podcast episodes.'),
       '#required' => TRUE,
+    );
+
+    $form['pubdate_field'] = array(
+      '#type' => 'select',
+      '#title' => t('Publication date field'),
+      '#options' => $date_field_types,
+      '#default_value' => $this->options['pubdate_field'],
+      '#description' => t('This specifies the date and time when an episode was released.'),
     );
 
     foreach ($this->option_definition() as $option => $options) {
@@ -122,6 +164,13 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
         }
       }
     }
+
+    // TODO: re-order to just below the GUID field.
+    $form['guid_perma'] = array(
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['guid_perma'],
+      '#title' => t('GUID is a permalink'),
+    );
   }
 
   function render_field($field, $from_options = TRUE, $strip_tags = TRUE) {
@@ -150,16 +199,13 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
   }
 
   function render($row) {
-    // For the most part, this code is taken from node_feed() in node.module
-    global $base_url;
 
     $rss_namespaces = array(
-	  'xmlns:itunes' => 'http://www.itunes.com/dtds/podcast-1.0.dtd',
-	);
-    $rss_elements = array(
-      //array('key' => 'pubDate', 'value' => gmdate('r', $node->created)),
-      //array('key' => 'guid', 'value' => $node->nid . ' at ' . $base_url, 'attributes' => array('isPermaLink' => 'false'))
+      'xmlns:itunes' => 'http://www.itunes.com/dtds/podcast-1.0.dtd',
     );
+
+    $rss_elements = array();
+
 
     $this->view->style_plugin->namespaces = array_merge($this->view->style_plugin->namespaces, $rss_namespaces);
 
@@ -167,6 +213,8 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
 
     // Add fields to the item that are special
     $item->title = $this->render_field('title_field');
+    $item->description = '';
+    $item->link = '';
 
     // Add all the other elements, defined in options.
     foreach ($this->option_definition() as $option => $options) {
@@ -174,7 +222,7 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
         if ($value = $this->render_field($option)) {
           // Do we need to pop it on the $item, or in the $rss_elements
           if (empty($options['ffpc']['on_object'])) {
-            $rss_elements[$options['ffpc']['xml_element']] = $value;
+            $rss_elements[] = array('key' => $options['ffpc']['xml_element'], 'value' => $value);
           }
           else {
             $item->{$options['ffpc']['xml_element']} = $value;
@@ -183,18 +231,21 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
       }
     }
 
-    // Now handle the enclosure.
-    $enclosure_field_types = ffpc_get_enclosure_field_types();
-    $field_handler = $this->view->display_handler->get_handler('field', $this->options['enclosure_field']);
-    if (isset($field_handler->field_info['type'])) {
-      $render_callback = $enclosure_field_types[$field_handler->field_info['type']]['render callback'];
-      if (function_exists($render_callback)) {
-        $view_values = $this->view->result[$this->view->row_index];
-        $render_callback($rss_elements, $view_values, $field_handler);
+    // Handle the GUID permalink
+    foreach ($rss_elements as $k => $element) {
+      if ($element['key'] == 'guid') {
+        $rss_elements[$k]['attributes']['isPermaLink'] = empty($this->options['guid_perma']) ? 'false' : 'true';
       }
     }
 
     $item->elements = $rss_elements;
+
+    if (!empty($this->options['enclosure_field'])) {
+      $this->render_handled_field($item, $this->options['enclosure_field'], 'file');
+    }
+    if (!empty($this->options['pubdate_field'])) {
+      $this->render_handled_field($item, $this->options['pubdate_field'], 'date');
+    }
 
     return theme($this->theme_functions(),
       array(
@@ -202,5 +253,28 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
         'options' => $this->options,
         'row' => $item
       ));
+  }
+
+  protected function render_handled_field($item, $option, $type) {
+    list($option_field, $option_handler) = explode(':', $option);
+    $field_handler = $this->view->display_handler->get_handler('field', $option_field);
+    $ffpc_handlers = ffpc_get_handled_field_types($type);
+    $view_values = $this->view->result[$this->view->row_index];
+    if (isset($ffpc_handlers[$option_handler])) {
+      $ffpc_handler = $ffpc_handlers[$option_handler];
+      // Make sure this still a valid field.
+      if (isset($ffpc_handler['identification callback']) && function_exists($ffpc_handler['identification callback'])) {
+        $function = $ffpc_handler['identification callback'];
+
+        if ($function($field_handler)) {
+          // We can now render this field too.
+          if (isset($ffpc_handler['render callback']) && function_exists($ffpc_handler['render callback'])) {
+            $render_callback = $ffpc_handler['render callback'];
+            $render_callback($item, $view_values, $field_handler);
+          }
+        }
+      }
+    }
+
   }
 }

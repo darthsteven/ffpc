@@ -12,37 +12,73 @@ function ffpc_views_api() {
 /**
  * Get all the enclosure field types supported.
  */
-function ffpc_get_enclosure_field_types() {
+function ffpc_get_handled_field_types($type) {
   $field_types = drupal_static(__FUNCTION__);
 
   if (!isset($field_types)) {
-    $field_types = module_invoke_all('ffpc_file_field_types');
-    drupal_alter('ffpc_file_field_types', $field_types);
+    $field_types = module_invoke_all('ffpc_handled_field_types');
+    drupal_alter('ffpc_handled_field_types', $field_types);
   }
 
-  return $field_types;
+  return isset($field_types[$type]) ? $field_types[$type] : array();
 }
 
 /**
  * Implements hook_ffpc_file_field_types().
  */
-function ffpc_ffpc_file_field_types() {
+function ffpc_ffpc_handled_field_types() {
   $fields = array();
 
-  $fields['file'] = array(
-    'render callback' => 'ffpc_file_field_enclosure_render',
+  $fields['file']['file_field'] = array(
+    'identification callback' => 'ffpc_file_field_identify',
+    'render callback' => 'ffpc_file_field_render',
+  );
+  $fields['date']['date_property'] = array(
+    'identification callback' => 'ffpc_date_property_identify',
+    'render callback' => 'ffpc_date_property_render',
+  );
+  $fields['date']['date_field'] = array(
+    'identification callback' => 'ffpc_date_field_identify',
+    'render callback' => 'ffpc_date_field_render',
   );
 
   return $fields;
 }
 
 /**
+ * Identification callback for file field view fields.
+ */
+function ffpc_file_field_identify($handler) {
+  if (isset($handler->field_info['type']) && ($handler->field_info['type'] == 'file')) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/**
+ * Identification callback for file field view fields.
+ */
+function ffpc_date_field_identify($handler) {
+  if (isset($handler->field_info['type']) && ($handler->field_info['type'] == 'date')) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/**
+ * Identification callback for date handler view fields.
+ */
+function ffpc_date_property_identify($handler) {
+  return is_a($handler, 'views_handler_field_date');
+}
+
+/**
  * Render callback for the file field type.
  */
-function ffpc_file_field_enclosure_render(&$rss_elements, $value, $field_handler) {
+function ffpc_file_field_render($item, $value, $field_handler) {
   $files = $field_handler->get_value($value);
   foreach ($files as $file) {
-    $rss_elements[] = array(
+    $item->elements[] = array(
       'key' => 'enclosure',
       'attributes'  =>  array(
         'url' => file_create_url($file['uri']),
@@ -52,6 +88,25 @@ function ffpc_file_field_enclosure_render(&$rss_elements, $value, $field_handler
     );
     break;
   }
+}
+
+function ffpc_date_field_render($item, $values, $field_handler) {
+  $value = $field_handler->get_value($values);
+  $date_item = reset($value);
+  $date = new DateObject($date_item['value'], $date_item['timezone_db'], date_type_format($date_item['date_type']));
+  if (!empty($date) && $date_item['timezone_db'] != $date_item['timezone']) {
+    date_timezone_set($date, timezone_open($date_item['timezone']));
+  }
+  $timestamp = !empty($date) ? date_format_date($date, 'custom', 'U') : '';
+  if (!empty($timestamp)) {
+    $item->elements[] = array('key' => 'pubDate', 'value' => gmdate('r', $timestamp));
+  }
+
+}
+
+function ffpc_date_property_render($item, $values, $field_handler) {
+  $value = $field_handler->get_value($values);
+  $item->elements[] = array('key' => 'pubDate', 'value' => gmdate('r', $value));
 }
 
 /**
