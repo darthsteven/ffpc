@@ -4,7 +4,6 @@ package = Views
 core = 7.x
 
 dependencies[] = views
-;dependencies[] = getid3
 
 files[] = ffpc_plugin_style_podcast.inc
 files[] = ffpc_plugin_row_podcast.inc
