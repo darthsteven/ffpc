@@ -41,6 +41,7 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
         'xml_element' => 'description',
         'title' => t('Summary field'),
         'description' => t('The contents of this tag are shown in a separate window that appears when the "circled i" in the Description column is clicked. It also appears on the iTunes page for your podcast. This field can be up to 4000 characters.'),
+        'on_object' => TRUE,
       ),
     );
     $options['keywords_field'] = array(
@@ -107,20 +108,20 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
       '#required' => TRUE,
     );
 
-	foreach ($this->option_definition() as $option => $options) {
-	  if (isset($options['ffpc'])) {
-		$form[$option] = array(
-		  '#type' => 'select',
-		  '#title' => $options['ffpc']['title'],
-		  '#options' => $field_options_optional,
-		  '#default_value' => $this->options[$option],
-		  '#description' => isset($options['ffpc']['description']) ? $options['ffpc']['description'] : '',
-		);
-		if (isset($options['ffpc']['required']) && $options['ffpc']['required']) {
-		  $form[$option]['#options'] = $field_options;
-		}
-	  }
-	}
+    foreach ($this->option_definition() as $option => $options) {
+      if (isset($options['ffpc'])) {
+        $form[$option] = array(
+          '#type' => 'select',
+          '#title' => $options['ffpc']['title'],
+          '#options' => $field_options_optional,
+          '#default_value' => $this->options[$option],
+          '#description' => isset($options['ffpc']['description']) ? $options['ffpc']['description'] : '',
+        );
+        if (isset($options['ffpc']['required']) && $options['ffpc']['required']) {
+          $form[$option]['#options'] = $field_options;
+        }
+      }
+    }
   }
 
   function render_field($field, $from_options = TRUE, $strip_tags = TRUE) {
@@ -171,7 +172,13 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
     foreach ($this->option_definition() as $option => $options) {
       if (isset($options['ffpc']['xml_element'])) {
         if ($value = $this->render_field($option)) {
-          $rss_elements[] = array('key' => $options['ffpc']['xml_element'], 'value' => $value);
+          // Do we need to pop it on the $item, or in the $rss_elements
+          if (empty($options['ffpc']['on_object'])) {
+            $rss_elements[$options['ffpc']['xml_element']] = $value;
+          }
+          else {
+            $item->{$options['ffpc']['xml_element']} = $value;
+          }
         }
       }
     }
