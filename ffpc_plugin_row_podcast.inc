@@ -15,6 +15,12 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
 
     $options['title_field'] = array(
       'default' => '',
+      'ffpc' => array(
+        'xml_element' => 'title',
+        'title' => t('Title field'),
+        'description' => t('This will be used as the title of podcast episodes.'),
+        'on_object' => TRUE,
+      ),
     );
     $options['enclosure_field'] = array(
       'default' => '',
@@ -194,15 +200,6 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
       $form['enclosure_field']['#description'] .= '<br />' . t('<strong>Try adding a file field to your views fields to enable an option here.</strong>');
     }
 
-    $form['title_field'] = array(
-      '#type' => 'select',
-      '#title' => t('Title field'),
-      '#options' => $field_options_optional,
-      '#default_value' => $this->options['title_field'],
-      '#description' => t('This will be used as the title of podcast episodes.'),
-    );
-
-
     $form['pubdate_field'] = array(
       '#type' => 'select',
       '#title' => t('Publication date field'),
@@ -243,28 +240,28 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
   }
 
   function render_field($field, $from_options = TRUE, $strip_tags = TRUE) {
-	$render = '';
-	if ($from_options) {
-	  if (isset($this->options[$field])) {
-		$field = $this->options[$field];
-	  }
-	  else {
-		$field = '';
-	  }
-	}
-	if (!empty($field)) {
-	  $idx = $this->view->row_index;
-	  $render = $this->view->style_plugin->get_field($this->view->row_index, $field);
-	  $this->view->row_index = $idx;
-	}
+    $render = '';
+    if ($from_options) {
+      if (isset($this->options[$field])) {
+        $field = $this->options[$field];
+      }
+      else {
+        $field = '';
+      }
+    }
+    if (!empty($field)) {
+      $idx = $this->view->row_index;
+      $render = $this->view->style_plugin->get_field($this->view->row_index, $field);
+      $this->view->row_index = $idx;
+    }
 
-	if (!empty($render) && (strpos($render, '<') !== FALSE)) {
-	  $render = strip_tags($render);
-	  if (!empty($render)) {
-		$render = trim($render);
-	  }
-	}
-	return $render;
+    if (!empty($render) && (strpos($render, '<') !== FALSE)) {
+      $render = strip_tags($render);
+      if (!empty($render)) {
+        $render = trim($render);
+      }
+    }
+	  return $render;
   }
 
   function render($row) {
@@ -281,7 +278,7 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
     $item = new stdClass;
 
     // Add fields to the item that are special
-    $item->title = $this->render_field('title_field');
+    $item->title = '';
     $item->description = '';
     $item->link = '';
 
@@ -344,6 +341,5 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
         }
       }
     }
-
   }
 }
