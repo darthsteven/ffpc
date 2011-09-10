@@ -17,6 +17,9 @@ function ffpc_get_handled_field_types($type) {
 
   if (!isset($field_types)) {
     $field_types = module_invoke_all('ffpc_handled_field_types');
+    if (!is_array($field_types)) {
+      $field_types = array();
+    }
     drupal_alter('ffpc_handled_field_types', $field_types);
   }
 
@@ -24,7 +27,7 @@ function ffpc_get_handled_field_types($type) {
 }
 
 /**
- * Implements hook_ffpc_file_field_types().
+ * Implements hook_ffpc_handled_field_types().
  */
 function ffpc_ffpc_handled_field_types() {
   $fields = array();
@@ -56,7 +59,7 @@ function ffpc_file_field_identify($handler) {
 }
 
 /**
- * Identification callback for file field view fields.
+ * Identification callback for date field view fields.
  */
 function ffpc_date_field_identify($handler) {
   if (isset($handler->field_info['type']) && ($handler->field_info['type'] == 'date')) {
@@ -90,6 +93,9 @@ function ffpc_file_field_render($item, $value, $field_handler) {
   }
 }
 
+/**
+ * Render callback for the date field type.
+ */
 function ffpc_date_field_render($item, $values, $field_handler) {
   $value = $field_handler->get_value($values);
   $date_item = reset($value);
@@ -104,6 +110,9 @@ function ffpc_date_field_render($item, $values, $field_handler) {
 
 }
 
+/**
+ * Render callback for the date handler type.
+ */
 function ffpc_date_property_render($item, $values, $field_handler) {
   $value = $field_handler->get_value($values);
   $item->elements[] = array('key' => 'pubDate', 'value' => gmdate('r', $value));
@@ -187,88 +196,12 @@ function template_preprocess_ffpc_view_podcast_feed(&$vars) {
     $args['itunes:summary'] = $options['itunes-summary'];
   }
 
-
-
-
   $vars['namespaces'] = drupal_attributes($style->namespaces);
   $vars['channel'] = format_rss_channel($title, $vars['link'], $description, $items, $language->language, $args);
 
-  //drupal_add_http_header('Content-Type', 'application/rss+xml');
-}
-
-/**
- * Implements hook_node_view().
- */
-/*function ffpc_node_view($node, $view_mode, $langcode) {
-  // If the view mode is RSS, lets go looking for ID3 tags to add.
-  if ($view_mode == 'rss') {
-    if (!getid3_load(TRUE)) {
-      return NULL;
-    }
-
-    $fields = drupal_static(__FUNCTION__);
-    $type = 'node';
-    // Find the meta tag fields to iterate over.
-    if (!isset($fields[$type])) {
-      $fields[$type] = array();
-      $bundles = field_info_instances($type);
-      foreach ($bundles as $bundle => $bundle_field_instances) {
-        foreach ($bundle_field_instances as $field_name => $field) {
-          $info = field_info_field_by_id($field['field_id']);
-          if ($info['type'] == 'file') {
-            $fields[$type][] = $field_name;
-          }
-        }
-      }
-    }
-    $getid3 = new getID3;
-
-    foreach ($fields[$type] as $key) {
-      if ($items = field_get_items($type, $node, $key, $langcode)) {
-        foreach ($items as $item) {
-          $id3_info = $getid3->analyze(drupal_realpath($item['uri']));
-          if (!isset($id3_info['error'])) {
-            $node->rss_namespaces['xmlns:itunes'] = 'http://www.itunes.com/dtds/podcast-1.0.dtd';
-            $node->rss_elements[] = array(
-              'key' => 'enclosure',
-              'attributes'  =>  array(
-                'url' => file_create_url($item['uri']),
-                'length' => $item['filesize'],
-                'type' => $item['filemime'],
-              ),
-            );
-
-            if (!empty($id3_info['playtime_string'])) {
-              $node->rss_elements[] = array(
-                'key' => 'itunes:duration',
-                'value' => $id3_info['playtime_string'],
-              );
-            }
-            if (!empty($id3_info['tags']['id3v2']['artist'][0])) {
-              $node->rss_elements[] = array(
-                'key' => 'itunes:author',
-                'value' => $id3_info['tags']['id3v2']['artist'][0],
-              );
-            }
-
-            //$file_extra[] = array(
-            //  'key' => 'itunes:subtitle',
-            //  'value' => str_replace('&amp;', '&', $item_subtitle),
-            //);
-            //$file_extra[] = array(
-            //  'key' => 'itunes:summary',
-            //  'value' => str_replace('&amp;', '&', $stripped_item_text),
-            //);
-
-            // Only consider the first successful file.
-            break 2;
-          }
-        }
-      }
-    }
-
-    unset($getid3);
-
-
+  // During live preview we don't want to output the header since the contents
+  // of the feed are being displayed inside a normal HTML page.
+  if (empty($view->live_preview)) {
+    drupal_add_http_header('Content-Type', 'application/rss+xml; charset=utf-8');
   }
-}*/
+}

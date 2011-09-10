@@ -32,11 +32,6 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
     );
     $options['pubdate_field'] = array(
       'default' => '',
-      //'ffpc' => array(
-      //  'xml_element' => 'pubDate',
-      //  'title' => t('Publication date field'),
-      //  'description' => t('This specifies the date and time when an episode was released.'),
-      //),
     );
     $options['link_field'] = array(
       'default' => '',
