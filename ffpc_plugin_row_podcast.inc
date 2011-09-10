@@ -54,7 +54,7 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
       'default' => '',
       'ffpc' => array(
         'xml_element' => 'itunes:subtitle',
-        'title' => t('Subtitle field'),
+        'title' => t('iTunes Subtitle field'),
         'description' => t('The contents of this tag are shown in the Description column in iTunes. The subtitle displays best if it is only a few words long.'),
       ),
     );
@@ -71,24 +71,50 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
       'default' => '',
       'ffpc' => array(
         'xml_element' => 'itunes:keywords',
-        'title' => t('Keywords field'),
+        'title' => t('iTunes Keywords field'),
         'description' => t('This tag allows users to search on a maximum of 12 text keywords. Use commas to separate keywords.'),
       ),
     );
-    /**
-     * Todo:
-     * - link
-     * - pubDate
-     * - itunes:block
-     * - itunes:image
-     * - itunes:duration
-     * - itunes:explicit
-     * - itunes:isClosedCaptioned
-     * - itunes:order
-     */
-
-
-
+    $options['itunes_block_field'] = array(
+      'default' => '',
+      'ffpc' => array(
+        'xml_element' => 'itunes:block',
+        'title' => t('iTunes block field'),
+        'description' => t('Use this to prevent an episode from appearing in the iTunes Podcast directory. For example, you may want a specific episode blocked from iTunes if its content might cause the feed to be removed from iTunes. If this tag is present and set to "yes" (case insensitive), that means to block the the episode.'),
+      ),
+    );
+    $options['itunes_duration_field'] = array(
+      'default' => '',
+      'ffpc' => array(
+        'xml_element' => 'itunes:duration',
+        'title' => t('iTunes duration field'),
+        'description' => t('The content of this tag is shown in the Time column in iTunes. The tag can be formatted HH:MM:SS, H:MM:SS, MM:SS, or M:SS (H = hours, M = minutes, S = seconds). If an integer is provided (no colon present), the value is assumed to be in seconds. If one colon is present, the number to the left is assumed to be minutes, and the number to the right is assumed to be seconds. If more than two colons are present, the numbers furthest to the right are ignored.'),
+      ),
+    );
+    $options['itunes_explicit_field'] = array(
+      'default' => '',
+      'ffpc' => array(
+        'xml_element' => 'itunes:explicit',
+        'title' => t('iTunes duration field'),
+        'description' => t('This tag should be used to indicate whether or not your podcast contains explicit material. The three values for this tag are "yes", "no", and "clean".'),
+      ),
+    );
+    $options['itunes_explicit_field'] = array(
+      'default' => '',
+      'ffpc' => array(
+        'xml_element' => 'itunes:isClosedCaptioned',
+        'title' => t('iTunes Closed Captioned field'),
+        'description' => t('This tag should be used if your episode includes a video with embedded closed captioning support. The two values for this tag are "yes" and "no".'),
+      ),
+    );
+    $options['itunes_order_field'] = array(
+      'default' => '',
+      'ffpc' => array(
+        'xml_element' => 'itunes:order',
+        'title' => t('iTunes Order field'),
+        'description' => t('This tag can be used to override the default ordering of episodes on the store.'),
+      ),
+    );
 
     return $options;
   }
@@ -102,7 +128,7 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
           $function = $ffpc_handler['identification callback'];
           if ($function($handler)) {
             $options[$id . ':' . $ffpc_id] = $handler->ui_name(FALSE);
-            // The first $ffpc_handler to ID the handler owns it.
+            // Once it's been identified, we're done.
             break;
           }
         }
@@ -128,6 +154,10 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
     $enclosure_field_types = $this->compute_field_options('file', $fields);
     $date_field_types = $this->compute_field_options('date', $fields);
 
+    $form['_description'] = array(
+      '#markup' => t('These options allow you to use normal views fields as the source of the fields in the podcast feed. You can use the rewriting options of the views fields to alter the values that will appear in the feed.'),
+    );
+
     $form['enclosure_field'] = array(
       '#type' => 'select',
       '#title' => t('Enclosure field'),
@@ -136,6 +166,9 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
       '#description' => t('This will be used as the file for the podcast episode.'),
       '#required' => TRUE,
     );
+    if (empty($enclosure_field_types)) {
+      $form['enclosure_field']['#description'] .= '<br />' . t('<strong>Try adding a file field to your views fields to enable an option here.</strong>');
+    }
 
     $form['title_field'] = array(
       '#type' => 'select',
@@ -146,6 +179,7 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
       '#required' => TRUE,
     );
 
+
     $form['pubdate_field'] = array(
       '#type' => 'select',
       '#title' => t('Publication date field'),
@@ -153,6 +187,9 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
       '#default_value' => $this->options['pubdate_field'],
       '#description' => t('This specifies the date and time when an episode was released.'),
     );
+    if (empty($date_field_types)) {
+      $form['pubdate_field']['#description'] .= '<br />' . t('<strong>Try adding a date field to your views fields to enable an option here.</strong>');
+    }
 
     foreach ($this->option_definition() as $option => $options) {
       if (isset($options['ffpc'])) {
@@ -169,12 +206,20 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
       }
     }
 
-    // TODO: re-order to just below the GUID field.
     $form['guid_perma'] = array(
       '#type' => 'checkbox',
       '#default_value' => $this->options['guid_perma'],
       '#title' => t('GUID is a permalink'),
     );
+    $weight = 0;
+    foreach (element_children($form) as $child) {
+      if ($child !== 'guid_perma') {
+        $form[$child]['#weight'] = $weight++;
+      }
+      if ($child == 'guid_field') {
+        $form['guid_perma']['#weight'] = $weight++;
+      }
+    }
   }
 
   function render_field($field, $from_options = TRUE, $strip_tags = TRUE) {
