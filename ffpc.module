@@ -175,7 +175,7 @@ function template_preprocess_ffpc_view_podcast_feed(&$vars) {
     $args['copyright'] = $options['copyright'];
   }
   if (!empty($options['itunes-image'])) {
-    $args['itunes:image'] = $options['itunes-image'];
+    $args['itunes:image'] = check_url(url($options['itunes-image'], array('absolute' => TRUE)));
   }
   if (!empty($options['itunes-explicit'])) {
     $args['itunes:explicit'] = $options['itunes-explicit'];
