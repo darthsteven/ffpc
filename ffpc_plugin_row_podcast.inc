@@ -138,12 +138,35 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
     return $options;
   }
 
+  function validate() {
+    $errors = parent::validate();
+    $fields = $this->display->handler->get_handlers('field');
+
+    foreach ($fields as $id => $handler) {
+      $field_options[$id] = $handler->ui_name(FALSE);
+    }
+    $field_options = array_keys($field_options);
+    $enclosure_field_types = array_keys($this->compute_field_options('file', $fields));
+    $date_field_types = array_keys($this->compute_field_options('date', $fields));
+
+    // Check the enclosure option.
+    if (!in_array($this->options['enclosure_field'], $enclosure_field_types)) {
+      $errors[] = t('Row style @row requires a enclosure field to be specified.', array('@row' => $this->definition['title']));
+    }
+
+    // Check the title option.
+    if (!in_array($this->options['title_field'], $field_options)) {
+      $errors[] = t('Row style @row requires a title field to be specified.', array('@row' => $this->definition['title']));
+    }
+
+    return $errors;
+  }
+
   function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
     $field_options = array();
     $fields = $this->display->handler->get_handlers('field');
-    $file_fields = array();
 
     foreach ($fields as $id => $handler) {
       $field_options[$id] = $handler->ui_name(FALSE);
@@ -152,7 +175,9 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
 
     // Get all the enclosure field types that we handle.
     $enclosure_field_types = $this->compute_field_options('file', $fields);
+    $enclosure_field_types = array_merge(array('' => t('- None -')), $enclosure_field_types);
     $date_field_types = $this->compute_field_options('date', $fields);
+    $date_field_types = array_merge(array('' => t('- None -')), $date_field_types);
 
     $form['_description'] = array(
       '#markup' => t('These options allow you to use normal views fields as the source of the fields in the podcast feed. You can use the rewriting options of the views fields to alter the values that will appear in the feed.'),
@@ -164,7 +189,6 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
       '#options' => $enclosure_field_types,
       '#default_value' => $this->options['enclosure_field'],
       '#description' => t('This will be used as the file for the podcast episode.'),
-      '#required' => TRUE,
     );
     if (empty($enclosure_field_types)) {
       $form['enclosure_field']['#description'] .= '<br />' . t('<strong>Try adding a file field to your views fields to enable an option here.</strong>');
@@ -173,10 +197,9 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
     $form['title_field'] = array(
       '#type' => 'select',
       '#title' => t('Title field'),
-      '#options' => $field_options,
+      '#options' => $field_options_optional,
       '#default_value' => $this->options['title_field'],
       '#description' => t('This will be used as the title of podcast episodes.'),
-      '#required' => TRUE,
     );
 
 
@@ -200,9 +223,6 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
           '#default_value' => $this->options[$option],
           '#description' => isset($options['ffpc']['description']) ? $options['ffpc']['description'] : '',
         );
-        if (isset($options['ffpc']['required']) && $options['ffpc']['required']) {
-          $form[$option]['#options'] = $field_options;
-        }
       }
     }
 
