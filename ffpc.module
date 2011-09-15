@@ -62,7 +62,12 @@ function ffpc_file_field_identify($handler) {
  * Identification callback for date field view fields.
  */
 function ffpc_date_field_identify($handler) {
-  if (isset($handler->field_info['type']) && ($handler->field_info['type'] == 'date')) {
+  $types = array(
+    'date',
+    'datestamp',
+    'datetime',
+  );
+  if (isset($handler->field_info['type']) && (in_array($handler->field_info['type'], $types))) {
     return TRUE;
   }
   return FALSE;
