@@ -83,6 +83,13 @@ class ffpc_plugin_style_podcast extends views_plugin_style_rss {
       '#description' => t('This will appear in the RSS feed itself.'),
     );
 
+    $form['itunes-keywords'] = array(
+      '#type' => 'textarea',
+      '#title' => t('iTunes Keywords'),
+      '#default_value' => $this->options['itunes-keywords'],
+      '#description' => t('This tag allows users to search on a maximum of 12 text keywords. Use commas to separate keywords.'),
+    );
+
     $form['itunes-summary'] = array(
       '#type' => 'textarea',
       '#title' => t('iTunes Summary'),

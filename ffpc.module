@@ -197,6 +197,9 @@ function template_preprocess_ffpc_view_podcast_feed(&$vars) {
   if (!empty($options['itunes-author'])) {
     $args['itunes:author'] = $options['itunes-author'];
   }
+  if (!empty($options['itunes-keywords'])) {
+    $args['itunes:keywords'] = $options['itunes-keywords'];
+  }
   if (!empty($options['itunes-summary'])) {
     $args['itunes:summary'] = $options['itunes-summary'];
   }
