@@ -51,7 +51,10 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
     $options['author_field'] = array(
       'default' => '',
       'ffpc' => array(
-        'xml_element' => 'author',
+        'xml_element' => array(
+          'author',
+          'itunes:author',
+        ),
         'title' => t('Author field'),
         'description' => t('This will be used as the author of podcast episodes.'),
         ),
@@ -288,7 +291,14 @@ class ffpc_plugin_row_podcast extends views_plugin_row {
         if ($value = $this->render_field($option)) {
           // Do we need to pop it on the $item, or in the $rss_elements
           if (empty($options['ffpc']['on_object'])) {
-            $rss_elements[] = array('key' => $options['ffpc']['xml_element'], 'value' => $value);
+            if (is_array($options['ffpc']['xml_element'])) {
+              foreach ($options['ffpc']['xml_element'] as $name) {
+                $rss_elements[] = array('key' => $name, 'value' => $value);
+              }
+            }
+            else {
+              $rss_elements[] = array('key' => $options['ffpc']['xml_element'], 'value' => $value);
+            }
           }
           else {
             $item->{$options['ffpc']['xml_element']} = $value;
