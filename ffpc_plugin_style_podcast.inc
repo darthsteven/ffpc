@@ -8,6 +8,7 @@ class ffpc_plugin_style_podcast extends views_plugin_style_rss {
 
     $options['copyright'] = array('default' => '', 'translatable' => TRUE);
     $options['description'] = array('default' => '', 'translatable' => TRUE);
+    $options['category'] = array('default' => '', 'translatable' => TRUE);
     $options['itunes-image'] = array('default' => '');
     $options['itunes-explicit'] = array('default' => '');
     $options['itunes-owner-name'] = array('default' => '', 'translatable' => TRUE);
@@ -33,6 +34,13 @@ class ffpc_plugin_style_podcast extends views_plugin_style_rss {
       '#type' => 'textarea',
       '#title' => t('Description'),
       '#default_value' => $this->options['description'],
+      '#description' => t('This will appear in the RSS feed itself.'),
+    );
+    
+    $form['category'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Category'),
+      '#default_value' => $this->options['category'],
       '#description' => t('This will appear in the RSS feed itself.'),
     );
 
