@@ -13,6 +13,7 @@ class ffpc_plugin_style_podcast extends views_plugin_style_rss {
     $options['itunes-owner-name'] = array('default' => '', 'translatable' => TRUE);
     $options['itunes-owner-email'] = array('default' => variable_get('site_mail', ini_get('sendmail_from')));
     $options['itunes-subtitle'] = array('default' => '', 'translatable' => TRUE);
+    $options['itunes-summary'] = array('default' => '', 'translatable' => TRUE);
     $options['itunes-author'] = array('default' => '', 'translatable' => TRUE);
 
     return $options;
@@ -79,6 +80,13 @@ class ffpc_plugin_style_podcast extends views_plugin_style_rss {
       '#type' => 'textfield',
       '#title' => t('iTunes Author'),
       '#default_value' => $this->options['itunes-author'],
+      '#description' => t('This will appear in the RSS feed itself.'),
+    );
+
+   $form['itunes-summary'] = array(
+      '#type' => 'textarea',
+      '#title' => t('iTunes Summary'),
+      '#default_value' => $this->options['itunes-summary'],
       '#description' => t('This will appear in the RSS feed itself.'),
     );
   }
