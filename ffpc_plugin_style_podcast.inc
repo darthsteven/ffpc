@@ -16,6 +16,7 @@ class ffpc_plugin_style_podcast extends views_plugin_style_rss {
     $options['itunes-subtitle'] = array('default' => '', 'translatable' => TRUE);
     $options['itunes-summary'] = array('default' => '', 'translatable' => TRUE);
     $options['itunes-author'] = array('default' => '', 'translatable' => TRUE);
+    $options['itunes-category'] = array('default' => array(), 'translatable' => FALSE);
 
     return $options;
   }
@@ -36,7 +37,7 @@ class ffpc_plugin_style_podcast extends views_plugin_style_rss {
       '#default_value' => $this->options['description'],
       '#description' => t('This will appear in the RSS feed itself.'),
     );
-    
+
     $form['category'] = array(
       '#type' => 'textfield',
       '#title' => t('Category'),
@@ -104,6 +105,13 @@ class ffpc_plugin_style_podcast extends views_plugin_style_rss {
       '#default_value' => $this->options['itunes-summary'],
       '#description' => t('This will appear in the RSS feed itself.'),
     );
-  }
 
+    $form['itunes-category'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('iTunes Categories'),
+      '#default_value' => $this->options['itunes-category'],
+      '#description' => t('You should select no more than three categories.'),
+      '#options' => ffpc_itunes_categories_options(),
+    );
+  }
 }

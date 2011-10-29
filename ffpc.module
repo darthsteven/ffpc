@@ -207,6 +207,36 @@ function template_preprocess_ffpc_view_podcast_feed(&$vars) {
     $args['itunes:summary'] = $options['itunes-summary'];
   }
 
+  // iTunes categories are a bit weird.
+  if (!empty($options['itunes-category'])) {
+    $categories = array();
+    foreach (array_filter($options['itunes-category']) as $combined) {
+      if (strpos($combined, '||') !== FALSE) {
+        list($first, $second) = explode('||', $combined, 2);
+        $args[] = array(
+          'key' => 'itunes:category',
+          'attributes' => array(
+            'text' => $first,
+          ),
+          'value' => array(array(
+            'key' => 'itunes:category',
+            'attributes' => array(
+              'text' => $second,
+            ),
+          )),
+        );
+      }
+      else {
+        $args[] = array(
+          'key' => 'itunes:category',
+          'attributes' => array(
+            'text' => $combined,
+          ),
+        );
+      }
+    }
+  }
+
   $vars['namespaces'] = drupal_attributes($style->namespaces);
   $vars['channel'] = format_rss_channel($title, $vars['link'], $description, $items, $language->language, $args);
 
@@ -215,4 +245,106 @@ function template_preprocess_ffpc_view_podcast_feed(&$vars) {
   if (empty($view->live_preview)) {
     drupal_add_http_header('Content-Type', 'application/rss+xml; charset=utf-8');
   }
+}
+
+/**
+ * Get possible iTunes categories.
+ */
+function ffpc_itunes_categories() {
+  return array(
+    'Arts' => array(
+      'Design',
+      'Fashion & Beauty',
+      'Food',
+      'Literature',
+      'Performing Arts',
+      'Visual Arts',
+    ),
+    'Business' => array(
+      'Business News',
+      'Careers',
+      'Investing',
+      'Management & Marketing',
+      'Shopping',
+    ),
+    'Comedy' => array(),
+    'Education' => array(
+      'Education',
+      'Education Technology',
+      'Higher Education',
+      'K-12',
+      'Language Courses',
+      'Training',
+    ),
+    'Games & Hobbies' => array(
+      'Automotive',
+      'Aviation',
+      'Hobbies',
+      'Other Games',
+      'Video Games',
+    ),
+    'Government & Organizations' => array(
+      'Local',
+      'National',
+      'Non-Profit',
+      'Regional',
+    ),
+    'Health' => array(
+      'Alternative Health',
+      'Fitness & Nutrition',
+      'Self-Help',
+      'Sexuality',
+    ),
+    'Kids & Family' => array(),
+    'Music' => array(),
+    'News & Politics' => array(),
+    'Religion & Spirituality' => array(
+      'Buddhism',
+      'Christianity',
+      'Hinduism',
+      'Islam',
+      'Judaism',
+      'Other',
+      'Spirituality',
+    ),
+    'Science & Medicine' => array(
+      'Medicine',
+      'Natural Sciences',
+      'Social Sciences',
+    ),
+    'Society & Culture' => array(
+      'History',
+      'Personal Journals',
+      'Philosophy',
+      'Places & Travel',
+    ),
+    'Sports & Recreation' => array(
+      'Amateur',
+      'College & High School',
+      'Outdoor',
+      'Professional',
+    ),
+    'Technology' => array(
+      'Gadgets',
+      'Tech News',
+      'Podcasting',
+      'Software How-To',
+    ),
+    'TV & Film' => array(),
+  );
+}
+
+/**
+ * Get iTunes categories as an array suitable for an options widget.
+ */
+function ffpc_itunes_categories_options() {
+  $options = array();
+  $categories = ffpc_itunes_categories();
+  foreach ($categories as $top_level => $second_levels) {
+    $options[$top_level] = $top_level;
+    foreach ($second_levels as $second_level) {
+      $options[$top_level . '||' . $second_level] = $top_level . ' > ' . $second_level;
+    }
+  }
+  return $options;
 }
