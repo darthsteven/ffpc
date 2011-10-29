@@ -69,21 +69,21 @@ class ffpc_plugin_style_podcast extends views_plugin_style_rss {
       '#description' => t('This will appear in the RSS feed itself.'),
     );
 
-   $form['itunes-subtitle'] = array(
+    $form['itunes-subtitle'] = array(
       '#type' => 'textfield',
       '#title' => t('iTunes Subtitle'),
       '#default_value' => $this->options['itunes-subtitle'],
       '#description' => t('This will appear in the RSS feed itself.'),
     );
 
-   $form['itunes-author'] = array(
+    $form['itunes-author'] = array(
       '#type' => 'textfield',
       '#title' => t('iTunes Author'),
       '#default_value' => $this->options['itunes-author'],
       '#description' => t('This will appear in the RSS feed itself.'),
     );
 
-   $form['itunes-summary'] = array(
+    $form['itunes-summary'] = array(
       '#type' => 'textarea',
       '#title' => t('iTunes Summary'),
       '#default_value' => $this->options['itunes-summary'],
